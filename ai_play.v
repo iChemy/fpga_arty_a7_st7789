@@ -1,4 +1,4 @@
-`include "config.v"
+`include "config.vh"
 `include "game_tree.v"
 
 module m_ai_play (
@@ -48,8 +48,8 @@ module m_ai_play (
         .o_selected_col(w_ai_tree_serach_selected_col)
     );
 
-    wire [`FIELD_SIZE-1:0] w_mp_input_field = (state == YOUR_PILING) ? r_your_field : (state == AI_PILING) ? r_ai_field : 42'b0;
-    wire [`PILED_COUNT_ARRAY_SIZE-1:0] w_mp_input_array = (state == YOUR_PILING || state == AI_PILING) ? r_piled_count_array : {21{1'b1}};
+    wire [`FIELD_SIZE-1:0] w_mp_input_field = (r_state == YOUR_PILING) ? r_your_field : (r_state == AI_PILING) ? r_ai_field : 42'b0;
+    wire [`PILED_COUNT_ARRAY_SIZE-1:0] w_mp_input_array = (r_state == YOUR_PILING || r_state == AI_PILING) ? r_piled_count_array : {21{1'b1}};
 
     wire w_mp_output_valid;
     wire[`FIELD_SIZE-1:0]  w_mp_output_field;
@@ -80,20 +80,16 @@ module m_ai_play (
             end
 
             if (w_user_input == USER_INPUT_OK) begin
-                if (r_state == RED_TURN) begin
-                    r_state <= RED_PILING;
-                end else begin
-                    r_state <= BLUE_PILING;
-                end
+                    r_state <= YOUR_PILING;
             end
         end else if (r_state == YOUR_PILING || r_state == AI_PILING) begin
             if (w_mp_output_valid) begin
-                if (state == YOUR_PILING) begin
+                if (r_state == YOUR_PILING) begin
                     r_your_field <= w_mp_output_field;
-                    state <= AI_TURN;
+                    r_state <= AI_TURN;
                 end else begin
                     r_ai_field <= w_mp_output_field;
-                    state <= YOUR_TURN;
+                    r_state <= YOUR_TURN;
                 end
                 r_piled_count_array <= w_mp_output_array;
             end else begin
@@ -110,8 +106,10 @@ module m_ai_play (
             end
         end
     end
+    
+    vio_0 vio_00(w_clk, r_state);
 
     assign o_ai_field = r_ai_field;
     assign o_your_field = r_your_field;
-    assign o_selected_col = r_selecting_col;
+    assign o_selecting_col = r_selecting_col;
 endmodule

@@ -57,8 +57,6 @@ module m_game_tree # (
             wire [`FIELD_SIZE-1:0] w_me_field_next, w_op_field_next;
             wire [`PILED_COUNT_ARRAY_SIZE-1:0] w_piled_array_next;
             wire w_pile_simu_valid, w_game_set;
-
-            // generate
                 if (IS_ME) begin
                     assign w_op_field_next = i_op_field;
                     m_piler p_me (
@@ -77,7 +75,7 @@ module m_game_tree # (
                         .o_detected(w_game_set)
                     );
                 end else begin
-                    assign w_me_field = i_me_field;
+                    assign w_me_field_next = i_me_field;
                     m_piler p_op (
                         .i_field(r_op_field),
                         .i_piled_count_array(r_piled_array),
@@ -94,8 +92,6 @@ module m_game_tree # (
                         .o_detected(w_game_set)
                     );
                 end
-
-            // endgenerate
 
             wire w_child_valid, w_child_finished;
             wire signed [15:0] w_child_score;
@@ -137,7 +133,6 @@ module m_game_tree # (
                     r_stored <= 1;
                 end else if (w_en & r_stored & !r_settlement_checked) begin
                     if (w_game_set) begin
-                        // generate
                             if (IS_ME) begin
                                 o_valid <= 1;
                                 o_finished <= 1;
@@ -149,7 +144,6 @@ module m_game_tree # (
                                 o_score <= {1'b1, {15{1'b0}}};
                                 o_selected_col <= 0;                                
                             end
-                        // endgenerate
                     end
                     r_settlement_checked <= 1;
                     r_en <= 1;
@@ -161,7 +155,6 @@ module m_game_tree # (
                             o_selected_col <= r_res_col; 
                     end else if (w_child_finished) begin
                         if (w_child_valid) begin
-                            // generate
                                 if (IS_ME) begin
                                     if (r_res_score < w_child_score) begin
                                         r_res_score <= w_child_score;
@@ -173,7 +166,6 @@ module m_game_tree # (
                                         r_res_col <= r_selected_col;
                                     end
                                 end
-                            // endgenerate
                         end
                         r_selected_col <= r_selected_col + 1;
                     end

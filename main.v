@@ -23,9 +23,9 @@ module m_main(
     reg [31:0] r_debounce_counter[3:0];      // 各ボタンごとのデバウンスカウンタ
 
     genvar i;
-    always @(posedge w_clk) begin
-        generate
-            for (i = 0; i < 4; i = i + 1) begin
+    generate
+        for (i = 0; i <4; i = i + 1) begin
+            always @(posedge w_clk) begin
                 if (w_button[i] == r_button_state[i]) begin
                     // ボタン状態が変わっていない場合、カウンタをリセット
                     r_debounce_counter[i] <= 0;
@@ -39,9 +39,8 @@ module m_main(
                     end
                 end
             end
-        endgenerate
-    end
-
+        end
+    endgenerate
     wire [`COL_SIZE-1:0] w_selecting_col;
 
     m_ai_play m_ai (
@@ -77,7 +76,7 @@ module m_main(
     always @(posedge w_clk) r_st_we    <= 1; 
 
     wire [`FIELD_SIZE-1:0] w_your_field, w_ai_field;
-    input [15:0] w_color;
+    wire [15:0] w_color;
 
     m_get_color gc (
         .i_your_field(w_your_field),
@@ -270,7 +269,7 @@ endmodule
 module m_get_color #(
     parameter EMPTY_COLOR = 16'hffff,
     parameter YOUR_COLOR = 16'h00ff,
-    parameter AI_COLOR = 16'h3333,
+    parameter AI_COLOR = 16'h3333
 )
 (
     input wire [`FIELD_SIZE-1:0] i_your_field,
@@ -279,7 +278,7 @@ module m_get_color #(
     input wire [7:0] i_x,
     input wire [7:0] i_y,
 
-    output [15:0] o_color
+    output wire [15:0] o_color
 );
     wire [`COL_SIZE-1:0] w_col_idx = (i_x-8) / 32;
     wire [`ROW_SIZE-1:0] w_row_idx = (i_y-48) / 32;
