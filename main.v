@@ -3,11 +3,8 @@
 /*********************************************************************************************/
 `default_nettype none
 
-`ifdef SYNTHESIS  
-`define WAIT_CNT 100
-`else
-`define WAIT_CNT 10
-`endif
+`include "config.vh"
+`include "ai_play.v"
   
 /*********************************************************************************************/
 module m_main(
@@ -18,22 +15,59 @@ module m_main(
     output wire st7789_SCL,     //
     output wire st7789_DC,      //
     output wire st7789_RES      //
-);
-    reg [31:0] r_cnt = 0;
-    always @(posedge w_clk) r_cnt <= r_cnt + 1;
-    assign w_led = r_cnt[29:26];
-    
+);  
+
+    // パラメータ: デバウンス時間 (20ms = 2,000,000クロックサイクル)
+    localparam DEBOUNCE_DELAY = 2000000;
+    reg [3:0] r_button_state = 4'b0;          // 安定したボタンの状態を保持
+    reg [31:0] r_debounce_counter[3:0];      // 各ボタンごとのデバウンスカウンタ
+
+    genvar i;
+    always @(posedge w_clk) begin
+        generate
+            for (i = 0; i < 4; i = i + 1) begin
+                if (w_button[i] == r_button_state[i]) begin
+                    // ボタン状態が変わっていない場合、カウンタをリセット
+                    r_debounce_counter[i] <= 0;
+                end else begin
+                    // ボタン状態が変化した場合、カウンタをインクリメント
+                    r_debounce_counter[i] <= r_debounce_counter[i] + 1;
+                    if (r_debounce_counter[i] >= DEBOUNCE_DELAY) begin
+                        // デバウンス時間を超えたら状態を更新
+                        r_button_state[i] <= w_button[i];
+                        r_debounce_counter[i] <= 0;
+                    end
+                end
+            end
+        endgenerate
+    end
+
+    wire [`COL_SIZE-1:0] w_selecting_col;
+
+    m_ai_play m_ai (
+        .w_clk(w_clk),
+        .w_rst(r_button_state == 4'b1111),
+
+        .w_user_input(r_button_state),
+
+        .o_selecting_col(w_selecting_col),
+        .o_your_field(w_your_field),
+        .o_ai_field(w_ai_field)
+    );
+
+    reg [`COL_SIZE-1:0] r_selecting_col;
+    always @(posedge w_clk) begin
+        r_selecting_col <= w_selecting_col; // for debug
+    end
+
     reg [7:0] r_x = 0;
     reg [7:0] r_y = 0;
     reg [7:0] r_d = 0;
     reg [7:0] r_wait = 1;
+
     always @(posedge w_clk) begin
         r_x <= (r_x==239) ? 0 : r_x + 1;
         r_y <= (r_y==239 && r_x==239) ? 0 : (r_x==239) ? r_y + 1 : r_y;
-        if(r_y==0 && r_x==0) begin
-            r_wait <= (r_wait>=`WAIT_CNT) ? 1 : r_wait + 1;
-            if(r_wait==1) r_d <= r_d + 1;
-        end
     end
     
     reg [15:0] r_st_wadr  = 0;
@@ -41,8 +75,33 @@ module m_main(
     reg [15:0] r_st_wdata = 0;
     always @(posedge w_clk) r_st_wadr  <= {r_y, r_x};
     always @(posedge w_clk) r_st_we    <= 1; 
-    always @(posedge w_clk) r_st_wdata <= (r_x<r_d && r_y<r_d) ? 16'hffff : 
-                                          (r_x<r_y) ? 16'b11111100000 : 16'b11111;
+
+    wire [`FIELD_SIZE-1:0] w_your_field, w_ai_field;
+    input [15:0] w_color;
+
+    m_get_color gc (
+        .i_your_field(w_your_field),
+        .i_ai_field(w_ai_field),
+
+        .i_x(r_x),
+        .i_y(r_y),
+
+        .o_color(w_color)
+    );
+
+    always @(posedge w_clk) begin
+        if (r_y < 48) begin
+            r_st_wdata <= 16'h2020;
+        end else if (r_x < 8 || r_x > 231) begin
+            r_st_wdata <= 16'h5500;
+        end else if (r_y % 32 == 14 || r_y % 32 == 15) begin
+            r_st_wdata <= 16'h7878;
+        end else if (r_x % 32 == 8 || r_x % 32 == 7) begin
+            r_st_wdata <= 16'hA0A0;
+        end else begin
+            r_st_wdata <= w_color;
+        end
+    end
   
     wire [15:0] w_raddr;    
     reg  [15:0] r_rdata = 0;
@@ -58,12 +117,10 @@ module m_main(
     reg [15:0] r_adr_p = 0;
     reg [15:0] r_dat_p = 0;
     always @(posedge w_clk) if(r_st_we) begin
-        if(vmem[r_st_wadr]!=r_st_wdata) begin
-            r_adr_p <= r_st_wadr;
-            r_dat_p <= r_st_wdata;
-            $write("@D%0d_%0d\n", r_st_wadr ^ r_adr_p, r_st_wdata ^ r_dat_p);
-            $fflush();
-        end
+        r_adr_p <= r_st_wadr;
+        r_dat_p <= r_st_wdata;
+        $write("@D%0d_%0d\n", r_st_wadr ^ r_adr_p, r_st_wdata ^ r_dat_p);
+        $fflush();
     end
 `endif
 
@@ -209,3 +266,27 @@ module m_spi(
     assign busy = (r_state!=0 || en);
 endmodule
 /*********************************************************************************************/
+
+module m_get_color #(
+    parameter EMPTY_COLOR = 16'hffff,
+    parameter YOUR_COLOR = 16'h00ff,
+    parameter AI_COLOR = 16'h3333,
+)
+(
+    input wire [`FIELD_SIZE-1:0] i_your_field,
+    input wire [`FIELD_SIZE-1:0] i_ai_field,
+
+    input wire [7:0] i_x,
+    input wire [7:0] i_y,
+
+    output [15:0] o_color
+);
+    wire [`COL_SIZE-1:0] w_col_idx = (i_x-8) / 32;
+    wire [`ROW_SIZE-1:0] w_row_idx = (i_y-48) / 32;
+
+    wire w_your = i_your_field[w_col_idx * `COL_COUNT + w_row_idx];
+    wire w_ai = i_your_field[w_col_idx * `COL_COUNT + w_row_idx];
+
+    assign o_color = (w_your) ? YOUR_COLOR : (w_ai) ? AI_COLOR : EMPTY_COLOR;
+
+endmodule
