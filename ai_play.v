@@ -1,5 +1,5 @@
 `include "config.vh"
-`include "game_tree.v"
+`include "game_tree_v2.v"
 
 module m_ai_play (
     input wire w_clk,
@@ -30,7 +30,7 @@ module m_ai_play (
     wire w_ai_tree_search_valid, w_ai_tree_search_finished;
     wire [`COL_SIZE-1:0] w_ai_tree_serach_selected_col;
 
-    m_game_tree #(
+    m_game_tree_v2 #(
         .IS_ME(1),
         .DEPTH(3)
     ) gt (

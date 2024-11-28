@@ -1,5 +1,5 @@
 `include "config.vh"
-`include "game_tree.v"
+`include "game_tree_v2.v"
 
 
 module tb_m_game_tree ();
@@ -33,7 +33,7 @@ module tb_m_game_tree ();
     reg [`COL_SIZE-1:0] r_selected_col;
     reg signed [15:0] r_score;
 
-    m_game_tree # (
+    m_game_tree_v2 # (
         .IS_ME(1),
         .DEPTH(1)
     )
@@ -61,7 +61,7 @@ module tb_m_game_tree ();
     end
 
     initial begin
-        $monitor("finished: %b |col: %d | score: %b", w_finished, r_selected_col, r_score);
+        // $monitor("finished: %b |col: %d | score: %d", w_finished, r_selected_col, r_score);
         #10000 $finish;
     end
 endmodule

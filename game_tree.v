@@ -95,6 +95,8 @@ module m_game_tree # (
 
             wire w_child_valid, w_child_finished;
             wire signed [15:0] w_child_score;
+            reg [`FIELD_SIZE-1:0] r_me_field_next = 0, r_op_field_next = 0;
+            reg [`PILED_COUNT_ARRAY_SIZE-1:0] r_piled_array_next = 0;
             m_game_tree #(
                 .IS_ME(~IS_ME),
                 .DEPTH(DEPTH-1)
@@ -103,15 +105,16 @@ module m_game_tree # (
                 .w_rst(w_rst),
                 .w_en(r_en),
                 
-                .i_me_field(w_me_field_next),
-                .i_op_field(w_op_field_next),
-                .i_piled_array(w_piled_array_next),
+                .i_me_field(r_me_field_next),
+                .i_op_field(r_op_field_next),
+                .i_piled_array(r_piled_array_next),
 
                 .o_valid(w_child_valid),
                 .o_finished(w_child_finished),
                 .o_score(w_child_score),
                 .o_selected_col()
             );
+
 
             always @(posedge w_clk) begin
                 if (w_rst || o_finished) begin
@@ -121,6 +124,10 @@ module m_game_tree # (
                     r_settlement_checked <= 0;
                     r_res_score <= (IS_ME) ? {1'b1, {15{1'b0}}} : {1'b0, {15{1'b1}}};
 
+                    r_me_field_next <= 0;
+                    r_op_field_next <= 0;
+                    r_piled_array_next <= 0;
+
                     o_valid <= 0;
                     o_finished <= 0;
                     o_selected_col <= 0;
@@ -128,6 +135,7 @@ module m_game_tree # (
                 end else if (w_en & !r_stored) begin
                     r_me_field <= i_me_field;
                     r_op_field <= i_op_field;
+
                     r_piled_array <= i_piled_array;
 
                     r_stored <= 1;
@@ -146,7 +154,6 @@ module m_game_tree # (
                             end
                     end
                     r_settlement_checked <= 1;
-                    r_en <= 1;
                 end else if (w_en & r_stored & r_settlement_checked & !o_finished) begin
                     if (r_selected_col == 7) begin
                             o_valid <= 1;
@@ -166,13 +173,21 @@ module m_game_tree # (
                                         r_res_col <= r_selected_col;
                                     end
                                 end
+                                r_selected_col <= r_selected_col + 1;
+                                r_en <= 0;
+                        end else begin
+                            if (w_pile_simu_valid) begin
+                                r_me_field_next <= w_me_field_next;
+                                r_op_field_next <= w_op_field_next;
+                                r_piled_array_next <= w_piled_array_next;
+                                r_en <= 1;
+                            end
                         end
-                        r_selected_col <= r_selected_col + 1;
                     end
                 end
             end
         initial begin
-            // $monitor("%b %b, %d, %d, %d, %d", w_child_finished, w_me_field_next, w_child_score, r_selected_col, r_res_score, r_res_col);
+            $monitor("%b %b %b %b %b, %b", r_stored, w_en, w_pile_simu_valid, i_me_field, w_me_field_next, r_me_field_next);
         end
         end
     endgenerate
