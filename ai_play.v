@@ -29,6 +29,8 @@ module m_ai_play (
 
     wire w_ai_tree_search_valid, w_ai_tree_search_finished;
     wire [`COL_SIZE-1:0] w_ai_tree_serach_selected_col;
+    wire signed [15:0] w_score;
+    reg signed [15:0] r_score;
 
     m_game_tree_v2 #(
         .IS_ME(1),
@@ -44,7 +46,7 @@ module m_ai_play (
 
         .o_valid(w_ai_tree_search_valid),
         .o_finished(w_ai_tree_search_finished),
-        .o_score(),
+        .o_score(w_score),
         .o_selected_col(w_ai_tree_serach_selected_col)
     );
 
@@ -103,6 +105,9 @@ module m_ai_play (
             if (w_ai_tree_search_valid & w_ai_tree_search_finished) begin
                 r_selecting_col <= w_ai_tree_serach_selected_col;
                 r_state <= AI_PILING;
+            end else begin
+                r_selecting_col <= w_ai_tree_serach_selected_col;
+                r_score <= w_score;
             end
         end
     end

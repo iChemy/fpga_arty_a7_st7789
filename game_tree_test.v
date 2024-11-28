@@ -53,15 +53,18 @@ module tb_m_game_tree ();
     );
 
     always @(posedge r_clk) begin
-        r_rst <= 0;
+        
         if (w_finished & w_valid) begin
             r_selected_col <= w_selected_col;
             r_score <= w_score;
+            r_rst <= 1;
+        end else begin
+            r_rst <= 0;
         end
     end
 
     initial begin
-        // $monitor("finished: %b |col: %d | score: %d", w_finished, r_selected_col, r_score);
+        $monitor("finished: %b |col: %d | score: %d", w_finished, r_selected_col, r_score);
         #10000 $finish;
     end
 endmodule
