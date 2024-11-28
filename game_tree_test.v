@@ -35,7 +35,7 @@ module tb_m_game_tree ();
 
     m_game_tree_v2 # (
         .IS_ME(1),
-        .DEPTH(1)
+        .DEPTH(3)
     )
     gt (
         .w_clk(r_clk),
@@ -65,6 +65,6 @@ module tb_m_game_tree ();
 
     initial begin
         $monitor("finished: %b |col: %d | score: %d", w_finished, r_selected_col, r_score);
-        #10000 $finish;
+        #1000000 $finish;
     end
 endmodule

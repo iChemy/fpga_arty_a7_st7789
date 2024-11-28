@@ -89,9 +89,16 @@ module m_main(
     );
 
     always @(posedge w_clk) begin
-        if (r_y < 48) begin
+        if (r_y < 40) begin
             r_st_wdata <= 16'h2020;
-        end else if (r_x < 8 || r_x > 231) begin
+        end else if (r_y >= 40 & r_y < 48) begin 
+            if (32*w_selecting_col + 8 < r_x & 32*(w_selecting_col+1)+8) begin
+                r_st_wdata <= 16'h4040;
+            end else begin
+                r_st_wdata <= 16'h2020;
+            end
+        end
+        else if (r_x < 8 || r_x > 231) begin
             r_st_wdata <= 16'h5500;
         end else if (r_y % 32 == 14 || r_y % 32 == 15) begin
             r_st_wdata <= 16'h7878;

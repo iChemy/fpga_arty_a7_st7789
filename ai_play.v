@@ -34,7 +34,7 @@ module m_ai_play (
 
     m_game_tree_v2 #(
         .IS_ME(1),
-        .DEPTH(3)
+        .DEPTH(2)
     ) gt (
         .w_clk(w_clk),
         .w_rst(r_state != AI_TURN),
