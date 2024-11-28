@@ -7,7 +7,7 @@ module m_ai_play (
 
     input wire [3:0] w_user_input,
 
-    output wire [`COL_SIZE-1:0] o_selecting_col,
+    output reg [`COL_SIZE-1:0] o_selecting_col,
     output wire [`FIELD_SIZE-1:0] o_your_field,
     output wire [`FIELD_SIZE-1:0] o_ai_field
 );
@@ -67,6 +67,7 @@ module m_ai_play (
     );
 
     always @(posedge w_clk) begin
+        o_selecting_col <= r_selecting_col;
         if (w_rst) begin
             r_ai_field <= 0;
             r_your_field = 0;
@@ -117,5 +118,4 @@ module m_ai_play (
 
     assign o_ai_field = r_ai_field;
     assign o_your_field = r_your_field;
-    assign o_selecting_col = r_selecting_col;
 endmodule
