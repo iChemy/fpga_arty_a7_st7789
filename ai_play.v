@@ -34,7 +34,7 @@ module m_ai_play (
 
     m_game_tree_v2 #(
         .IS_ME(1),
-        .DEPTH(2)
+        .DEPTH(1)
     ) gt (
         .w_clk(w_clk),
         .w_rst(r_state != AI_TURN),
@@ -74,11 +74,11 @@ module m_ai_play (
             r_state <= YOUR_TURN;
         end else if (r_state == YOUR_TURN) begin
             if (w_user_input == USER_INPUT_INC) begin
-                r_selecting_col <= (r_selecting_col + 1) % `COL_SIZE;
+                r_selecting_col <= (r_selecting_col + 1) % `COL_COUNT;
             end
 
             if (w_user_input == USER_INPUT_DEC) begin
-                r_selecting_col <= (r_selecting_col - 1) % `COL_SIZE;
+                r_selecting_col <= (r_selecting_col - 1) % `COL_COUNT;
             end
 
             if (w_user_input == USER_INPUT_OK) begin
