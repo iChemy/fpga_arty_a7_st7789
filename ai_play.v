@@ -113,6 +113,7 @@ module m_ai_play (
     end
     
     vio_0 vio_00(w_clk, r_state);
+    vio_1 vio_10(w_clk, r_selecting_col, r_score);
 
     assign o_ai_field = r_ai_field;
     assign o_your_field = r_your_field;
