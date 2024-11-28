@@ -92,7 +92,7 @@ module m_main(
         if (r_y < 40) begin
             r_st_wdata <= 16'h2020;
         end else if (r_y >= 40 & r_y < 48) begin 
-            if (32*w_selecting_col + 8 < r_x & 32*(w_selecting_col+1)+8) begin
+            if (32*w_selecting_col + 8 < r_x & r_x < 32*(w_selecting_col+1)+8) begin
                 r_st_wdata <= 16'h4040;
             end else begin
                 r_st_wdata <= 16'h2020;
