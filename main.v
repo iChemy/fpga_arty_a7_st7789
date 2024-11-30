@@ -4,7 +4,7 @@
 `default_nettype none
 
 `include "config.vh"
-`include "ai_play.v"
+`include "two_people_play.v"
   
 /*********************************************************************************************/
 module m_main(
@@ -43,21 +43,18 @@ module m_main(
     endgenerate
     wire [`COL_SIZE-1:0] w_selecting_col;
 
-    m_ai_play m_ai (
+    m_two_people_play tpp (
         .w_clk(w_clk),
         .w_rst(r_button_state == 4'b1111),
 
-        .w_user_input(r_button_state),
+        .i_user_input(r_button_state),
 
         .o_selecting_col(w_selecting_col),
-        .o_your_field(w_your_field),
-        .o_ai_field(w_ai_field)
+        .o_red_field(w_your_field),
+        .o_blue_field(w_ai_field)
     );
 
     reg [`COL_SIZE-1:0] r_selecting_col;
-    always @(posedge w_clk) begin
-        r_selecting_col <= w_selecting_col; // for debug
-    end
 
     reg [7:0] r_x = 0;
     reg [7:0] r_y = 0;
