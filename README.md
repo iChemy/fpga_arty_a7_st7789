@@ -71,5 +71,3 @@ This is the summary of `clk_wiz_0` used in `main.v`. Ouput clock is
 50MHz.
 
 ![image of clocking wizard](./clocking_wizard.png)
-
-![clocking wizard summary]()
