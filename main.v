@@ -4,7 +4,8 @@
 `default_nettype none
 
 `include "config.vh"
-`include "two_people_play.v"
+`include "one_person_play.v"
+// `include "two_people_play.v"
   
 /*********************************************************************************************/
 module m_main(
@@ -42,17 +43,58 @@ module m_main(
         end
     endgenerate
     wire [`COL_SIZE-1:0] w_selecting_col;
+    wire w_rst;
+    assign w_rst = r_button_state == 4'b1111;
+    wire w_game_clk, locked;
+    
+    `ifdef SYNTHESIS
+        clk_wiz_0 clk_wiz_00(
+            .clk_in1(w_clk), .clk_out1(w_game_clk), .locked(locked) // 50MHz で動作することが確認できている. 75MHz ではタイミング制約を満たさず正常に動作しない
+        );
+    `else
+        reg r_game_clk = 0;
+        initial forever #5 r_game_clk <= ~r_game_clk;
+        assign  w_game_clk = r_game_clk;
+    `endif
 
-    m_two_people_play tpp (
-        .w_clk(w_clk),
-        .w_rst(r_button_state == 4'b1111),
+    
+    reg [3:0] r_random_button_state = 4'b0001;
+    reg [15:0] r_button_counter = 0;
+    
+    always @(posedge w_clk) begin
+        r_button_counter <= r_button_counter + 1;
+        if (r_button_counter > 8192) begin
+            r_random_button_state = 4'b1000;
+        end else begin
+            r_random_button_state = 4'b0001;
+        end
+    end
+    
+    
+    m_one_person_play opp (
+        .w_clk(w_game_clk),
+        .w_rst(w_rst),
 
-        .i_user_input(r_button_state),
+        // .i_user_input(r_button_state),
+        .i_user_input(r_random_button_state), // 適当な操作 (ai の動作を確かめるため -> 基本的に ai 側が勝つはず)
 
         .o_selecting_col(w_selecting_col),
         .o_red_field(w_your_field),
         .o_blue_field(w_ai_field)
     );
+    
+    reg [`FIELD_SIZE-1:0] r_your_field, r_ai_field;
+    
+    always @(posedge w_clk) begin
+        r_your_field <= w_your_field;
+        r_ai_field <= w_ai_field;
+    end
+
+    `ifdef SYNTHESIS
+        vio_0 vio_00(w_clk, r_your_field);
+        vio_0 vio_01(w_clk, r_ai_field);
+    `endif macro
+
 
     reg [`COL_SIZE-1:0] r_selecting_col;
 
