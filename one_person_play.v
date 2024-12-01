@@ -3,6 +3,7 @@
 // `include "winning_detector.v"
 `include "depth_first_game_tree.v"
 
+// 赤が人間で先行
 module m_one_person_play (
     input wire w_clk,
     input wire w_rst,

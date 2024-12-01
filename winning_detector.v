@@ -1,5 +1,6 @@
 `include "config.vh"
 
+// 勝利判定
 module m_winning_detector
 # (
     parameter IN_A_ROW_LEN = 4

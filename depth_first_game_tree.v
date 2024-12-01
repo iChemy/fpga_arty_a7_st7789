@@ -4,6 +4,7 @@
 
 `default_nettype none
 
+// 深さ優先探索によるゲーム木の探索 (minmax)
 module m_depth_first_game_tree #(
     // 自分が持っている子孫の世代数 (0なら葉)
     parameter [7:0] DEPTH = 4,

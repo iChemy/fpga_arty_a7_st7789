@@ -3,6 +3,7 @@
 `include "winning_detector.v"
 
 
+// 評価関数
 module m_evaluation_func (
     input wire [`FIELD_SIZE-1:0] i_me_field,
     input wire [`FIELD_SIZE-1:0] i_op_field,
